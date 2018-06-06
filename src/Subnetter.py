@@ -1,6 +1,7 @@
 from PyQt4 import QtGui
 from ui.UiSubnetter import Ui_Subnetter
 from CustomInputDialog import CustomInputDialog
+from Warning import Warning
 from SubnetDetail import SubnetDetail
 import Vlsm
 
@@ -15,7 +16,7 @@ class Subnetter(QtGui.QMainWindow):
         self.subnetter = None
         self.netNum = 0
         self.hosts = []
-        self.ready = False
+        self.emptyFields = False
 
         self.ui.octate1.setText("172")
         self.ui.octate2.setText("16")
@@ -47,7 +48,7 @@ class Subnetter(QtGui.QMainWindow):
         self.show()
 
     def startSubnet(self):
-        if(self.ready):
+        if(self.hosts and not(self.emptyFields)):
             self.subnetter.subnet()
             subnets = self.subnetter.getSubs()
             for subnet in subnets:
@@ -63,16 +64,21 @@ class Subnetter(QtGui.QMainWindow):
                 self.ui.subnetTable.setItem(rowcount-1 , 2 , item)
                 self.ui.subnetTable.insertRow(rowcount)
         else:
-            self.setHosts()
+            if(not(self.hosts)):
+                self.window = Warning("Set The Hosts First!")
+            elif(self.emptyFields):
+                self.window = Warning("Empty Fields!")
         self.ready = False
 
     def prepareIp(self):
+        self.emptyFields = False
         map(self.checkInput , [self.ui.octate1 , self.ui.octate2 ,self.ui.octate3 ,self.ui.octate4 , self.ui.cidr])
         ip =  self.ui.octate1.toPlainText() + "." + self.ui.octate2.toPlainText() + "." +self.ui.octate3.toPlainText() + "." +self.ui.octate4.toPlainText()
         cidr = self.ui.cidr.toPlainText()
         hosts = tuple(self.hosts)
-        self.subnetter = Vlsm.Vlsm(ip , cidr , hosts)
-        self.ui.cname.setText(self.subnetter.getClass())
+        if(not(self.emptyFields)):
+            self.subnetter = Vlsm.Vlsm(ip , cidr , hosts)
+            self.ui.cname.setText(self.subnetter.getClass())
     def setHosts(self):
         host = 0
         self.hosts , ok =  CustomInputDialog().getHost()
@@ -85,7 +91,7 @@ class Subnetter(QtGui.QMainWindow):
         if(len(textEdit.toPlainText()) > 3):
             textEdit.textCursor().deletePreviousChar()
         if(len(textEdit.toPlainText()) < 1):
-            textEdit.setText("1")
+            self.emptyFields = True
         if(not(str(textEdit.toPlainText()).isdigit())):
             textEdit.textCursor().deletePreviousChar()
     def showSubnetDetail(self):
