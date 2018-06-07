@@ -20,14 +20,17 @@ class CustomInputDialog(QtGui.QDialog):
         dialog.exec_()
         return dialog.hosts , dialog.setClicked
     def setHost(self):
-        self.hosts = map(int , str(self.ui.netEdit.toPlainText()).split(" "))
-        self.setClicked = True
-        self.close()
+        self.hosts = str(self.ui.netEdit.toPlainText()).split(" ")
+        if(self.hosts):
+            self.hosts = map(int , self.hosts)
+            self.setClicked = True
+            self.close()
     def clearScreen(self):
         self.ui.netEdit.setText("")
     def checkInput(self):
-        txt = "".join(str(self.ui.netEdit.toPlainText()).split(" "))
-        if(len(txt) < 1):
-            self.ui.netEdit.setText("1")
+        txt = str(self.ui.netEdit.toPlainText())
+        if(txt[len(txt)-1] ==  " " and txt[len(txt)-2] ==  " "):
+            self.ui.netEdit.textCursor().deletePreviousChar()
+        txt = "".join(txt.split(" "))
         if(not(txt.isdigit())):
             self.ui.netEdit.textCursor().deletePreviousChar()
